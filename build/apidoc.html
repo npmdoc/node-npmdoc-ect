@@ -1,0 +1,227 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="http://ectjs.com"
+
+    >ect (v0.5.9)</a>
+</h1>
+<h4>CoffeeScript template engine</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.ect">module ect</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.ect.ect">
+            function <span class="apidocSignatureSpan"></span>ect
+            <span class="apidocSignatureSpan">(options)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.ect" id="apidoc.module.ect">module ect</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.ect.ect" id="apidoc.element.ect.ect">
+        function <span class="apidocSignatureSpan"></span>ect
+        <span class="apidocSignatureSpan">(options)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">ect = function (options) {
+		if (!(this instanceof ECT)) {
+			return new ECT(options);
+		}
+
+		this.options = {
+			open : &#x27;&#x3c;%&#x27;,
+			close : &#x27;%&#x3e;&#x27;,
+			ext : &#x27;&#x27;,
+			cache : true,
+			watch : false,
+			root : &#x27;&#x27;
+		};
+
+		var
+			ect = this,
+			trimExp = /^[ \t]+|[ \t]+$/g,
+			newlineExp = /\n/g,
+			cache = {},
+			watchers = {},
+			indentChars = { &#x27;:&#x27; : &#x27;:&#x27;, &#x27;&#x3e;&#x27; : &#x27;&#x3e;&#x27; },
+			escapeExp = /[&#x26;&#x3c;&#x3e;&#x22;]/,
+			escapeAmpExp = /&#x26;/g,
+			escapeLtExp = /&#x3c;/g,
+			escapeGtExp = /&#x3e;/g,
+			escapeQuotExp = /&#x22;/g,
+			regExpEscape = function (str) {
+				return String(str).replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, &#x27;\\$&#x26;&#x27;);
+			},
+
+			read = function (file) {
+				if (Object.prototype.toString.call(ect.options.root) === &#x27;[object Object]&#x27;) {
+					var data = file.split(&#x27;.&#x27;).reduce(function (currentContext, key) { return currentContext[key]; }, ect.options.root);
+					if (Object.prototype.toString.call(data) === &#x27;[object String]&#x27;) {
+						return data;
+					} else {
+						throw new Error (&#x27;Failed to load template &#x27; + file);
+					}
+				} else {
+					try {
+						return fs.readFileSync(file, &#x27;utf8&#x27;);
+					} catch (e) {
+						throw new Error (&#x27;Failed to load template &#x27; + file);
+					}
+				}
+			},
+
+			compile = function (template) {
+				var
+					lineNo = 1,
+					bufferStack = [ &#x27;__ectOutput&#x27; ], bufferStackPointer = 0,
+					buffer = bufferStack[bufferStackPointer] + &#x27; = \&#x27;&#x27;,
+					matches = template.split(new RegExp(regExpEscape(ect.options.open) + &#x27;((?:.|[\r\n])+?)(?:&#x27; + regExpEscape(ect.options.close
+) + &#x27;|$)&#x27;)),
+					output, text, command, line,
+					prefix, postfix, newline,
+					indentChar, indentation = &#x27;&#x27;, indent = false, indentStack = [], indentStackPointer = -1, baseIndent, lines, j;
+
+				for (var i = 0; i &#x3c; matches.length; i++) {
+					text = matches[i];
+					command = &#x27;&#x27;;
+					if (i % 2 === 1) {
+						line = &#x27;__ectFileInfo.line = &#x27; + lineNo;
+						switch (text.charAt(0)) {
+						case &#x27;=&#x27;:
+							prefix = &#x27;\&#x27; + (&#x27; + line + &#x27;\n\&#x27;\&#x27;) + __ectTemplateContext.escape(&#x27;;
+							postfix = &#x27;) + \&#x27;&#x27;;
+							newline = &#x27;&#x27;;
+							text = text.substr(1);
+							output = &#x27;escaped&#x27;;
+							break;
+						case &#x27;-&#x27;:
+							prefix = &#x27;\&#x27; + (&#x27; + line + &#x27;\n\&#x27;\&#x27;) + ((&#x27;;
+							postfix = &#x27;) ? \&#x27;\&#x27;) + \&#x27;&#x27;;
+							newline = &#x27;&#x27;;
+							text = text.substr(1);
+							output = &#x27;unescaped&#x27;;
+							break;
+						default:
+							prefix = &#x27;\&#x27;\n&#x27; + line;
+							postfix = &#x27;\n&#x27; + bufferStack[bufferStackPointer] + &#x27; += \&#x27;&#x27;;
+							newline = &#x27;\n&#x27;;
+							output = &#x27;none&#x27;;
+						}
+						text = text.replace(trimExp, &#x27;&#x27;);
+
+						command = text.split(/[^a-z]+/)[0];
+						if ((indentChar = indentChars[text.charAt(text.length - 1)])) {
+							text = text.replace(/:$/, &#x27;&#x27;).replace(trimExp, &#x27;&#x27;);
+							if (indentChar === &#x27;&#x3e;&#x27;) {
+								if (/[$a-z_][0-9a-z_$]*[^=]+(-|=)&#x3e;/i.test(text.replace(/&#x27;.*&#x27;|&#x22;.*&#x22;/, &#x27;&#x27;))) {
+									indentStack.push(&#x27;capture_output_&#x27; + output);
+									indentStackPointer++;
+								}
+								bufferStack.push(&#x27;__ectFunction&#x27; + bufferStackPointer);
+								bufferStackPointer++;
+								postfix = &#x27;\n&#x27; + bufferStack[bufferStackPointer] + &#x27; = \&#x27;&#x27;;
+								command = &#x27;function&#x27;;
+							}
+							indentStack.push(command);
+							indentStackPointer++;
+							indent = true;
+						}
+						switch (command) {
+						case &#x27;include&#x27; :
+							if (output === &#x27;none&#x27;) {
+								prefix = &#x27;\&#x27; + (&#x27; + line + &#x27;\n\&#x27;\&#x27;) + (&#x27;;
+								postfix = &#x27;) + \&#x27;&#x27;;
+							}
+							buffer += prefix.replace(newlineExp, &#x27;\n&#x27; + indentation) + text + postfix.replace(newlineExp, &#x27;\n&#x27; + indentation);
+							break;
+						case &#x27;block&#x27; :
+							bufferStack.push(&#x27;__ectTemplateContext.blocks[\&#x27;&#x27; + text.replace(/block\s+(&#x27;|&#x22;)([^&#x27;&#x22;]+)(&#x27;|&#x22;).*/, &#x27;$2&#x27;) + &#x27;\&#x27;]&#x27;);
+							bufferStackPointer++;
+							prefix = &#x27;\&#x27;\n&#x27;;
+							postfix = &#x27;\n&#x27; + bufferStack[bufferStackPointer] + &#x27; += \&#x27;&#x27;;
+							text = &#x27;if &#x27; + text;
+							buffer += prefix.replace(newlineExp, &#x27;\n&#x27; + indentation) + text;
+							if (indent) {
+								indentation += &#x27;  &#x27;;
+								indent = false;
+							}
+							buffer += postfix.replace(newlineExp, &#x27;\n&#x27; + indentation);
+							break;
+						case &#x27;content&#x27; :
+							if (output === &#x27;none&#x27;) {
+								prefix = &#x27;\&#x27; + (&#x27; + line + &#x27;\n\&#x27;\&#x27;) + (&#x27;;
+								postfi ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>

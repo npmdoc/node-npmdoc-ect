@@ -1,0 +1,221 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="http://ectjs.com">ect (v0.5.9)</a>
+</h1>
+<h4>CoffeeScript template engine</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.ect">module ect</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.ect.ect">
+            function <span class="apidocSignatureSpan"></span>ect
+            <span class="apidocSignatureSpan">(options)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.ect" id="apidoc.module.ect">module ect</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.ect.ect" id="apidoc.element.ect.ect">
+        function <span class="apidocSignatureSpan"></span>ect
+        <span class="apidocSignatureSpan">(options)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">ect = function (options) {
+		if (!(this instanceof ECT)) {
+			return new ECT(options);
+		}
+
+		this.options = {
+			open : '&lt;%',
+			close : '%&gt;',
+			ext : '',
+			cache : true,
+			watch : false,
+			root : ''
+		};
+
+		var
+			ect = this,
+			trimExp = /^[ \t]+|[ \t]+$/g,
+			newlineExp = /\n/g,
+			cache = {},
+			watchers = {},
+			indentChars = { ':' : ':', '&gt;' : '&gt;' },
+			escapeExp = /[&amp;&lt;&gt;"]/,
+			escapeAmpExp = /&amp;/g,
+			escapeLtExp = /&lt;/g,
+			escapeGtExp = /&gt;/g,
+			escapeQuotExp = /"/g,
+			regExpEscape = function (str) {
+				return String(str).replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&amp;');
+			},
+
+			read = function (file) {
+				if (Object.prototype.toString.call(ect.options.root) === '[object Object]') {
+					var data = file.split('.').reduce(function (currentContext, key) { return currentContext[key]; }, ect.options.root);
+					if (Object.prototype.toString.call(data) === '[object String]') {
+						return data;
+					} else {
+						throw new Error ('Failed to load template ' + file);
+					}
+				} else {
+					try {
+						return fs.readFileSync(file, 'utf8');
+					} catch (e) {
+						throw new Error ('Failed to load template ' + file);
+					}
+				}
+			},
+
+			compile = function (template) {
+				var
+					lineNo = 1,
+					bufferStack = [ '__ectOutput' ], bufferStackPointer = 0,
+					buffer = bufferStack[bufferStackPointer] + ' = \'',
+					matches = template.split(new RegExp(regExpEscape(ect.options.open) + '((?:.|[\r\n])+?)(?:' + regExpEscape(ect.options.close
+) + '|$)')),
+					output, text, command, line,
+					prefix, postfix, newline,
+					indentChar, indentation = '', indent = false, indentStack = [], indentStackPointer = -1, baseIndent, lines, j;
+
+				for (var i = 0; i &lt; matches.length; i++) {
+					text = matches[i];
+					command = '';
+					if (i % 2 === 1) {
+						line = '__ectFileInfo.line = ' + lineNo;
+						switch (text.charAt(0)) {
+						case '=':
+							prefix = '\' + (' + line + '\n\'\') + __ectTemplateContext.escape(';
+							postfix = ') + \'';
+							newline = '';
+							text = text.substr(1);
+							output = 'escaped';
+							break;
+						case '-':
+							prefix = '\' + (' + line + '\n\'\') + ((';
+							postfix = ') ? \'\') + \'';
+							newline = '';
+							text = text.substr(1);
+							output = 'unescaped';
+							break;
+						default:
+							prefix = '\'\n' + line;
+							postfix = '\n' + bufferStack[bufferStackPointer] + ' += \'';
+							newline = '\n';
+							output = 'none';
+						}
+						text = text.replace(trimExp, '');
+
+						command = text.split(/[^a-z]+/)[0];
+						if ((indentChar = indentChars[text.charAt(text.length - 1)])) {
+							text = text.replace(/:$/, '').replace(trimExp, '');
+							if (indentChar === '&gt;') {
+								if (/[$a-z_][0-9a-z_$]*[^=]+(-|=)&gt;/i.test(text.replace(/'.*'|".*"/, ''))) {
+									indentStack.push('capture_output_' + output);
+									indentStackPointer++;
+								}
+								bufferStack.push('__ectFunction' + bufferStackPointer);
+								bufferStackPointer++;
+								postfix = '\n' + bufferStack[bufferStackPointer] + ' = \'';
+								command = 'function';
+							}
+							indentStack.push(command);
+							indentStackPointer++;
+							indent = true;
+						}
+						switch (command) {
+						case 'include' :
+							if (output === 'none') {
+								prefix = '\' + (' + line + '\n\'\') + (';
+								postfix = ') + \'';
+							}
+							buffer += prefix.replace(newlineExp, '\n' + indentation) + text + postfix.replace(newlineExp, '\n' + indentation);
+							break;
+						case 'block' :
+							bufferStack.push('__ectTemplateContext.blocks[\'' + text.replace(/block\s+('|")([^'"]+)('|").*/, '$2') + '\']');
+							bufferStackPointer++;
+							prefix = '\'\n';
+							postfix = '\n' + bufferStack[bufferStackPointer] + ' += \'';
+							text = 'if ' + text;
+							buffer += prefix.replace(newlineExp, '\n' + indentation) + text;
+							if (indent) {
+								indentation += '  ';
+								indent = false;
+							}
+							buffer += postfix.replace(newlineExp, '\n' + indentation);
+							break;
+						case 'content' :
+							if (output === 'none') {
+								prefix = '\' + (' + line + '\n\'\') + (';
+								postfi ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
